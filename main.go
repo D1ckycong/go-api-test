@@ -11,6 +11,8 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "Hello, World!")
 }
 
+// てすとだよ
+
 func main() {
     r := mux.NewRouter()
     r.HandleFunc("/hello", helloHandler).Methods("GET")
