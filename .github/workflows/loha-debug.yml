@@ -1,0 +1,34 @@
+name: Deploy to denkigas-info.jp
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: denkigas-info.jpへのデプロイ
+    runs-on: ubuntu-latest
+    steps:
+      # リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+            # 現在の日付を取得
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      # リクエスト用のhash値を生成
+      - name: Generate Hash
+        shell: bash
+        env:
+          WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
+        run: |
+          HASH=$(echo -n "${CURRENT_DATE}$WEBHOOK_TOKEN" | openssl dgst -sha256 -hmac "stg-deploy-secret" | sed 's/^.* //')
+          echo "GENERATED_HASH=$HASH" >> $GITHUB_ENV
+      
+      # サーバーの更新処理用Webhookを発火(ハッシュ値は環境変数に設定)
+      # - name: Trigger Webhook
+      #   run: |
+      #     curl -X POST -H "Content-Type: application/json" \
+      #     -d "{\"hash\": \"${GENERATED_HASH}\"}" \
+      #     "https://hook.denkigas-info.jp/deployProd.php"
