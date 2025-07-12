@@ -6,7 +6,7 @@ on:
       should_fail:
         description: '失敗させるか？ true にすると失敗'
         required: false
-        default: 'false'
+        default: 'true'
 
 jobs:
   api-test:
