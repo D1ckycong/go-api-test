@@ -1,0 +1,33 @@
+name: API Manual Trigger Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      should_fail:
+        description: '失敗させるか？ true にすると失敗'
+        required: false
+        default: 'false'
+
+jobs:
+  api-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: セットアップ - フラグ取得
+        id: setup
+        run: |
+          echo "should_fail=${{ github.event.inputs.should_fail }}" >> $GITHUB_OUTPUT
+
+      - name: 15秒間の待機
+        run: |
+          echo "⏳ 15秒間待機中..."
+          sleep 15  # ✅ ここで待機時間を変更可能（秒）
+
+      - name: 成否の分岐
+        run: |
+          if [ "${{ steps.setup.outputs.should_fail }}" = "true" ]; then
+            echo "❌ テスト失敗をシミュレートします"
+            exit 1
+          else
+            echo "✅ 正常に終了しました"
+          fi
