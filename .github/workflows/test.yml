@@ -7,6 +7,9 @@ on:
         description: '失敗させるか？ true にすると失敗'
         required: false
         default: 'false'
+      response_url:
+        description: 'Slackのresponse_url'
+        required: true
 
 jobs:
   api-test:
@@ -17,17 +20,34 @@ jobs:
         id: setup
         run: |
           echo "should_fail=${{ github.event.inputs.should_fail }}" >> $GITHUB_OUTPUT
+          echo "response_url=${{ github.event.inputs.response_url }}" >> $GITHUB_OUTPUT
 
       - name: 15秒間の待機
         run: |
           echo "⏳ 15秒間待機中..."
           sleep 15  # ✅ ここで待機時間を変更可能（秒）
 
-      - name: 成否の分岐
+      - name: 成否の分岐とSlack通知
         run: |
-          if [ "${{ steps.setup.outputs.should_fail }}" = "true" ]; then
+          RESPONSE_URL="${{ steps.setup.outputs.response_url }}"
+          SHOULD_FAIL="${{ steps.setup.outputs.should_fail }}"
+
+          if [ "$SHOULD_FAIL" = "true" ]; then
             echo "❌ テスト失敗をシミュレートします"
-            exit 1
+            MESSAGE="❌ APIテストが失敗しました。"
+            STATUS=1
           else
             echo "✅ 正常に終了しました"
+            MESSAGE="✅ APIテストが正常に完了しました。"
+            STATUS=0
           fi
+
+          if [ -n "$RESPONSE_URL" ]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{\"text\": \"${MESSAGE}\"}" \
+              "$RESPONSE_URL"
+          else
+            echo "⚠️ Slackのresponse_urlが指定されていません。"
+          fi
+
+          exit $STATUS
